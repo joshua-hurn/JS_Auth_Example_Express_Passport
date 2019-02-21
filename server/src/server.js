@@ -22,11 +22,12 @@ connection.connect();
 app.use(bodyParser.urlencoded({ extended: true }));
 // passport.initalize needs to be there to start the process that passport provides... apparently.
 app.use(passport.initialize());
+// this stores the successcul login as a cookie in the request headers. This allows for you to 
 app.use(passport.session());
 
 app.use(express.static(clientPath));
-app.get('/success', (req, res) => res.send('this is the successful login route.'));
-app.get('/incorrect-credentials-asshole', (req, res) => res.send('incorrect credentials'));
+app.get('/success', (req, res) => res.send('login successful.'));
+app.get('/incorrect-credentials', (req, res) => res.send('incorrect credentials'));
 app.post('/login',
     passport.authenticate('local', {
         successRedirect: '/success',
@@ -34,9 +35,12 @@ app.post('/login',
     })
 );
 
-passport.use(new LocalStrategy(
-    function (username, password, done) {
-        connection.query("SELECT * FROM `users` WHERE `username` = '" + username + "'", function (err, rows) {
+passport.use(new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password'
+  },
+    function (email, password, done) {
+        connection.query("SELECT * FROM `users` WHERE `email` = '" + email + "'", function (err, rows) {
             if (err)
                 return done(err);
             if (!rows.length) {
